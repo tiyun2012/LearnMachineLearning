@@ -37,8 +37,10 @@ for size in test_sizes:
     accuracy = model.score(X_test, y_test)
     accuracies.append(accuracy)
 
+
 plt.plot(test_sizes, accuracies)
 plt.xlabel('Test size')
 plt.ylabel('Accuracy')
 plt.title('Accuracy of Logistic Regression Model over Different Test Sizes')
 plt.show()
+
