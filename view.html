@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Interactive Scatter Plot</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.bokeh.js.org/bokeh/latest/bokeh.min.js"></script>
+</head>
+<body>
+
+  <div id="plot"></div>
+
+  <label for="x_pos">X Position:</label>
+  <input type="number" id="x_pos" value="1.0">
+  <br>
+
+  <label for="y_pos">Y Position:</label>
+  <input type="number" id="y_pos" value="2.0">
+  <br>
+
+  <script>
+    function updateData() {
+      const x_pos = parseFloat(document.getElementById('x_pos').value);
+      const y_pos = parseFloat(document.getElementById('y_pos').value);
+
+      const data = {
+        x: [x_pos],
+        y: [y_pos]
+      };
+
+      // Update the Bokeh data source with the new data
+      source.data = data;
+
+      // Update the plot title
+      plot.title.text = `Scatter Plot (Position: ${x_pos}, ${y_pos})`;
+
+      // Trigger a render event to update the plot
+      plot.render();
+    }
+
+    // Create a Bokeh ColumnDataSource
+    const source = new Bokeh.ColumnDataSource({
+      data: { x: [], y: [] }
+    });
+
+    // Create a Bokeh figure
+    const plot = new Bokeh.Plotting.figure({
+      width: 500,
+      height: 250,
+      title: {
+        text: `Scatter Plot (Position: 1.0, 2.0)`
+      }
+    });
+
+    // Create scatter plot using the data source
+    plot.circle({ x: 'x', y: 'y', source: source, size: 10, color: 'blue' });
+
+    // Render the plot to the container
+    plot.render('plot');
+
+    // Attach an event listener to update the data whenever the input values change
+    document.getElementById('x_pos').addEventListener('input', updateData);
+    document.getElementById('y_pos').addEventListener('input', updateData);
+  </script>
+</body>
+</html>
