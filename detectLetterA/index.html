@@ -18,10 +18,9 @@
   }
 
   canvas {
-    /* The actual canvas is 32x32, but we scale it up for better visibility */
     width: 320px;
     height: 320px;
-    border: 1px solid #08cc12;
+    border: 1px solid #000;
     image-rendering: pixelated; /* Keeps a crisp appearance */
   }
 
@@ -46,8 +45,11 @@
 <div class="controls">
   <button id="clearBtn">Clear</button>
   <button id="saveBtn">Save</button>
+  <button id="submitBtn">Submit to Python</button>
 </div>
+<div id="result"></div>
 
+<!-- Existing drawing logic script -->
 <script>
   const canvas = document.getElementById('drawCanvas');
   const ctx = canvas.getContext('2d');
@@ -136,12 +138,34 @@
   // Save button
   document.getElementById('saveBtn').addEventListener('click', () => {
     const dataURL = canvas.toDataURL('image/png');
-    // Create a temporary link to initiate download
     const link = document.createElement('a');
     link.download = 'drawing.png';
     link.href = dataURL;
     link.click();
   });
 </script>
+
+<!-- New script to handle submit to Python backend -->
+<script>
+  document.getElementById('submitBtn').addEventListener('click', () => {
+    const imageData = canvas.toDataURL('image/png');
+    
+    fetch('http://localhost:5000/process-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageData: imageData })
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log(data);
+      document.getElementById('result').textContent = data.message || 'No message received';
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      document.getElementById('result').textContent = 'Error submitting image';
+    });
+  });
+</script>
+
 </body>
 </html>

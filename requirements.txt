@@ -2,3 +2,6 @@ numpy
 pandas
 bokeh
 matplotlib
+tensorflow
+scikit-learn
+flask
