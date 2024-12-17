@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Drawing App (32x32)</title>
+<style>
+  body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+  }
+  
+  #drawing-container {
+    position: relative;
+  }
+
+  canvas {
+    /* The actual canvas is 32x32, but we scale it up for better visibility */
+    width: 320px;
+    height: 320px;
+    border: 1px solid #08cc12;
+    image-rendering: pixelated; /* Keeps a crisp appearance */
+  }
+
+  .controls {
+    margin-top: 20px;
+  }
+
+  button {
+    padding: 8px 12px;
+    margin: 0 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<h1>Simple Drawing App (32x32)</h1>
+<div id="drawing-container">
+  <canvas id="drawCanvas" width="32" height="32"></canvas>
+</div>
+<div class="controls">
+  <button id="clearBtn">Clear</button>
+  <button id="saveBtn">Save</button>
+</div>
+
+<script>
+  const canvas = document.getElementById('drawCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Initialize the canvas with a white background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 1;
+  ctx.lineCap = 'round';
+
+  let drawing = false;
+
+  // Functions to handle drawing
+  function startDrawing(x, y) {
+    drawing = true;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  }
+
+  function drawLine(x, y) {
+    if (!drawing) return;
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  }
+
+  function stopDrawing() {
+    drawing = false;
+  }
+
+  // Convert client coordinates to canvas coordinates
+  function getCanvasCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width; 
+    const scaleY = canvas.height / rect.height;
+    let clientX, clientY;
+    if (e.touches) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+    return { x, y };
+  }
+
+  // Mouse events
+  canvas.addEventListener('mousedown', (e) => {
+    const { x, y } = getCanvasCoords(e);
+    startDrawing(x, y);
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    const { x, y } = getCanvasCoords(e);
+    drawLine(x, y);
+  });
+
+  canvas.addEventListener('mouseup', stopDrawing);
+  canvas.addEventListener('mouseleave', stopDrawing);
+
+  // Touch events for mobile
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // Prevent scrolling
+    const { x, y } = getCanvasCoords(e);
+    startDrawing(x, y);
+  });
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const { x, y } = getCanvasCoords(e);
+    drawLine(x, y);
+  });
+
+  canvas.addEventListener('touchend', stopDrawing);
+
+  // Clear button
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1;
+  });
+
+  // Save button
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    const dataURL = canvas.toDataURL('image/png');
+    // Create a temporary link to initiate download
+    const link = document.createElement('a');
+    link.download = 'drawing.png';
+    link.href = dataURL;
+    link.click();
+  });
+</script>
+</body>
+</html>
