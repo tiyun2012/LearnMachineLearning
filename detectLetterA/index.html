@@ -21,7 +21,7 @@
     width: 320px;
     height: 320px;
     border: 1px solid #000;
-    image-rendering: pixelated; /* Keeps a crisp appearance */
+    image-rendering: pixelated;
   }
 
   .controls {
@@ -33,6 +33,11 @@
     margin: 0 5px;
     font-size: 16px;
     cursor: pointer;
+  }
+
+  #processedImage {
+    margin-top: 20px;
+    border: 1px solid #ccc;
   }
 </style>
 </head>
@@ -49,7 +54,9 @@
 </div>
 <div id="result"></div>
 
-<!-- Existing drawing logic script -->
+<!-- Add an img element to display the returned image -->
+<img id="processedImage" alt="Processed Image Will Appear Here" width="320" height="320" />
+
 <script>
   const canvas = document.getElementById('drawCanvas');
   const ctx = canvas.getContext('2d');
@@ -63,7 +70,6 @@
 
   let drawing = false;
 
-  // Functions to handle drawing
   function startDrawing(x, y) {
     drawing = true;
     ctx.beginPath();
@@ -80,7 +86,6 @@
     drawing = false;
   }
 
-  // Convert client coordinates to canvas coordinates
   function getCanvasCoords(e) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width; 
@@ -98,7 +103,6 @@
     return { x, y };
   }
 
-  // Mouse events
   canvas.addEventListener('mousedown', (e) => {
     const { x, y } = getCanvasCoords(e);
     startDrawing(x, y);
@@ -112,9 +116,8 @@
   canvas.addEventListener('mouseup', stopDrawing);
   canvas.addEventListener('mouseleave', stopDrawing);
 
-  // Touch events for mobile
   canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault(); // Prevent scrolling
+    e.preventDefault();
     const { x, y } = getCanvasCoords(e);
     startDrawing(x, y);
   });
@@ -127,7 +130,6 @@
 
   canvas.addEventListener('touchend', stopDrawing);
 
-  // Clear button
   document.getElementById('clearBtn').addEventListener('click', () => {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -135,7 +137,6 @@
     ctx.lineWidth = 1;
   });
 
-  // Save button
   document.getElementById('saveBtn').addEventListener('click', () => {
     const dataURL = canvas.toDataURL('image/png');
     const link = document.createElement('a');
@@ -143,13 +144,9 @@
     link.href = dataURL;
     link.click();
   });
-</script>
 
-<!-- New script to handle submit to Python backend -->
-<script>
   document.getElementById('submitBtn').addEventListener('click', () => {
     const imageData = canvas.toDataURL('image/png');
-    
     fetch('http://localhost:5000/process-image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -159,10 +156,15 @@
     .then(data => {
       console.log(data);
       document.getElementById('result').textContent = data.message || 'No message received';
+      // Set the processed image in the <img> tag
+      if (data.imageData) {
+        document.getElementById('processedImage').src = data.imageData;
+      }
     })
     .catch(error => {
       console.error('Error:', error);
       document.getElementById('result').textContent = 'Error submitting image';
+      
     });
   });
 </script>
