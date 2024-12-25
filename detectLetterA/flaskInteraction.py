@@ -3,7 +3,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 from flask_cors import CORS
-from .NeuralNetWork import NeuralNetwork
+from .NeuralNetWork import NeuralNetwork,run
 app = Flask(__name__)
 nn=NeuralNetwork()
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -30,7 +30,7 @@ def process_image():
         returned_data_url = f"data:image/png;base64,{returned_base64}"
         nn.test_method()
         NeuralNetwork.test_static()
-
+        # run()
         # Include the processed image in the JSON response
         return jsonify({
             'status': 'success',
@@ -40,18 +40,44 @@ def process_image():
     else:
         return jsonify({'status': 'error', 'message': 'Invalid image data'}), 400
 
-@app.route('/debug', methods=['POST'])
-def debug():
-    print("Debugging python code...")
+# @app.route('/debugbtn', methods=['POST'])
+# def debugbtn():
+#     print("Debugging python code...")
 
-    # For demonstration, let's assume we have a sample image or a generated image.
-    # You could reuse the image data from the last request, or load a static image from disk.
-    # Let's say we have a static image "debug_image.png" in the same folder.
-    with open("debug_image.png", "rb") as img_file:
-        encoded = base64.b64encode(img_file.read()).decode('utf-8')
-    returned_data_url = f"data:image/png;base64,{encoded}"
 
-    return "----------test debug--------------", 200
+#     return jsonify({'status':'----------test debug--------------'}), 200
+@app.route('/debugbtn', methods=['POST'])
+def debugbtn():
+    print("Debugging Python code...")
+    data = request.json.get('imageData')
+    
+    if data and data.startswith('data:image/png;base64,'):
+        base64_str = data.replace('data:image/png;base64,', '')
+        image_bytes = base64.b64decode(base64_str)
+        image = Image.open(BytesIO(image_bytes))
+
+        # Convert the image to grayscale (L mode for black-and-white images)
+        image = image.convert("L")
+
+        # Get pixel values
+        pixels = list(image.getdata())  # Returns a flat list of pixel intensity values (0-255)
+
+        # Optionally print each pixel value (for demonstration)
+        print("Pixel values:")
+        for i, pixel in enumerate(pixels):
+            print(f"Pixel {i}: {pixel}")
+        
+        # Optionally reshape the flat list into a 2D list for easier visualization (32x32 in this case)
+        width, height = image.size
+        pixel_matrix = [pixels[i * width:(i + 1) * width] for i in range(height)]
+        print("Pixel matrix:")
+        for row in pixel_matrix:
+            print(row)
+
+        return jsonify({'status': 'success', 'message': 'Pixel values printed in server log'}), 200
+    else:
+        return jsonify({'status': 'error', 'message': 'Invalid image data'}), 400
+
 
 if __name__ == '__main__':
     app.run(debug=True)

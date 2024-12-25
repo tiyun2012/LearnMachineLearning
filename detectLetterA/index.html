@@ -51,6 +51,7 @@
   <button id="clearBtn">Clear</button>
   <button id="saveBtn">Save</button>
   <button id="submitBtn">Submit to Python</button>
+  <button id="debugbtn">Debug</button>
 </div>
 <div id="result"></div>
 
@@ -144,6 +145,53 @@
     link.href = dataURL;
     link.click();
   });
+  document.getElementById("debugbtn").addEventListener("click", async () => {
+  try {
+    // Convert canvas data to base64
+    const imageData = canvas.toDataURL("image/png");
+
+    // Send image data to Flask server
+    const response = await fetch("http://localhost:5000/debugbtn", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageData: imageData }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    // Parse and display the server's response
+    const data = await response.json();
+    console.log("Response from debugbtn:", data);
+    document.getElementById("result").textContent = data.message || "No message received";
+  } catch (error) {
+    console.error("Error calling debugbtn:", error);
+    document.getElementById("result").textContent = "Error calling debugbtn";
+  }
+});
+
+  // document.getElementById("debugbtn").addEventListener("click", async () => {
+  //   try {
+  //     // Make a GET request to the /debugbtn route
+  //     // const response = await fetch("/debugbtn");
+  //     const response = await fetch("http://localhost:5000/debugbtn",{ method: "POST" });
+  //     if (!response.ok) { throw new Error('Network response was not ok'); }
+  //     // If you returned JSON:
+  //     const data = await response.json();
+  //     console.log("Response from debugbtn:", data);
+
+  //     // If you returned just text, you could do:
+  //     // const text = await response.text();
+  //     // console.log("Response from debugbtn:", text);
+
+  //     // You could also display it in the UI, e.g.:
+  //     // document.getElementById("debugOutput").innerText = JSON.stringify(data);
+
+  //   } catch (error) {
+  //     console.error("Error calling debugbtn:", error);
+  //   }
+  // });
 
   document.getElementById('submitBtn').addEventListener('click', () => {
     const imageData = canvas.toDataURL('image/png');
