@@ -58,6 +58,26 @@ class NeuralNetwork:
         self.bias2 -= learning_rate * db2
         self.weights1 -= learning_rate * dw1
         self.bias1 -= learning_rate * db1
+    def train(self, X, y, num_epochs, learning_rate, batch_size):
+        m = X.shape[0]  # Total number of samples
+        for epoch in range(num_epochs):
+            # Shuffle the data
+            permutation = np.random.permutation(m)
+            X_shuffled = X[permutation]
+            y_shuffled = y[permutation]
+            
+            for i in range(0, m, batch_size):
+                # Create batches
+                X_batch = X_shuffled[i:i + batch_size]
+                y_batch = y_shuffled[i:i + batch_size]
+
+                # Forward and backward pass
+                y_pred = self.forward(X_batch)
+                self.backward(X_batch, y_batch, learning_rate)
+
+            if epoch % 10 == 0:  # Print loss every 10 epochs
+                loss = self.cross_entropy_loss(self.forward(X), y)
+                print(f"Epoch {epoch}, Loss: {loss:.4f}")
 
     def predict(self, X):
         y_pred = self.forward(X)

@@ -12,7 +12,7 @@
     align-items: center;
     margin-top: 50px;
   }
-  
+
   #drawing-container {
     position: relative;
   }
@@ -33,6 +33,31 @@
     margin: 0 5px;
     font-size: 16px;
     cursor: pointer;
+    position: relative;
+  }
+
+  /* Tooltip styles */
+  button::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+    font-size: 14px;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 100;
+  }
+
+  button:hover::after {
+    visibility: visible;
+    opacity: 1;
   }
 
   #processedImage {
@@ -48,21 +73,20 @@
   <canvas id="drawCanvas" width="32" height="32"></canvas>
 </div>
 <div class="controls">
-  <button id="clearBtn">Clear</button>
-  <button id="saveBtn">Save</button>
-  <button id="submitBtn">Submit to Python</button>
-  <button id="debugbtn">Debug</button>
+  <input id="imageName" type="text" placeholder="Enter name of image"/>
+  <button id="clearBtn" data-tooltip="Clear the canvas">Clear</button>
+  <button id="saveBtn" data-tooltip="Save drawing as PNG">Save</button>
+  <button id="submitBtn" data-tooltip="Submit image to server">Submit to Python</button>
+  <button id="debugbtn" data-tooltip="Debug the image">Debug</button>
 </div>
 <div id="result"></div>
 
-<!-- Add an img element to display the returned image -->
 <img id="processedImage" alt="Processed Image Will Appear Here" width="320" height="320" />
 
 <script>
   const canvas = document.getElementById('drawCanvas');
   const ctx = canvas.getContext('2d');
 
-  // Initialize the canvas with a white background
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.strokeStyle = '#000000';
@@ -89,7 +113,7 @@
 
   function getCanvasCoords(e) {
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width; 
+    const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     let clientX, clientY;
     if (e.touches) {
@@ -140,58 +164,31 @@
 
   document.getElementById('saveBtn').addEventListener('click', () => {
     const dataURL = canvas.toDataURL('image/png');
+    let imageName = document.getElementById('imageName').value.trim();
+    if (!imageName) imageName = 'drawing';
+    imageName = imageName.replace(/[<>:"/\\|?*]+/g, '');
+    if (!imageName.toLowerCase().endsWith('.png')) imageName += '.png';
     const link = document.createElement('a');
-    link.download = 'drawing.png';
+    link.download = imageName;
     link.href = dataURL;
     link.click();
   });
-  document.getElementById("debugbtn").addEventListener("click", async () => {
-  try {
-    // Convert canvas data to base64
-    const imageData = canvas.toDataURL("image/png");
 
-    // Send image data to Flask server
-    const response = await fetch("http://localhost:5000/debugbtn", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imageData: imageData }),
-    });
+  document.getElementById('debugbtn').addEventListener('click', async () => {
+    try {
+      const imageData = canvas.toDataURL('image/png');
+      const response = await fetch('http://localhost:5000/debugbtn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageData: imageData }),
+      });
 
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
+      const data = await response.json();
+      document.getElementById('result').textContent = data.message || 'No message received';
+    } catch (error) {
+      document.getElementById('result').textContent = 'Error calling debugbtn';
     }
-
-    // Parse and display the server's response
-    const data = await response.json();
-    console.log("Response from debugbtn:", data);
-    document.getElementById("result").textContent = data.message || "No message received";
-  } catch (error) {
-    console.error("Error calling debugbtn:", error);
-    document.getElementById("result").textContent = "Error calling debugbtn";
-  }
-});
-
-  // document.getElementById("debugbtn").addEventListener("click", async () => {
-  //   try {
-  //     // Make a GET request to the /debugbtn route
-  //     // const response = await fetch("/debugbtn");
-  //     const response = await fetch("http://localhost:5000/debugbtn",{ method: "POST" });
-  //     if (!response.ok) { throw new Error('Network response was not ok'); }
-  //     // If you returned JSON:
-  //     const data = await response.json();
-  //     console.log("Response from debugbtn:", data);
-
-  //     // If you returned just text, you could do:
-  //     // const text = await response.text();
-  //     // console.log("Response from debugbtn:", text);
-
-  //     // You could also display it in the UI, e.g.:
-  //     // document.getElementById("debugOutput").innerText = JSON.stringify(data);
-
-  //   } catch (error) {
-  //     console.error("Error calling debugbtn:", error);
-  //   }
-  // });
+  });
 
   document.getElementById('submitBtn').addEventListener('click', () => {
     const imageData = canvas.toDataURL('image/png');
@@ -202,17 +199,11 @@
     })
     .then(response => response.json())
     .then(data => {
-      console.log(data);
       document.getElementById('result').textContent = data.message || 'No message received';
-      // Set the processed image in the <img> tag
-      if (data.imageData) {
-        document.getElementById('processedImage').src = data.imageData;
-      }
+      if (data.imageData) document.getElementById('processedImage').src = data.imageData;
     })
     .catch(error => {
-      console.error('Error:', error);
       document.getElementById('result').textContent = 'Error submitting image';
-      
     });
   });
 </script>

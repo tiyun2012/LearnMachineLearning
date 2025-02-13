@@ -40,12 +40,7 @@ def process_image():
     else:
         return jsonify({'status': 'error', 'message': 'Invalid image data'}), 400
 
-# @app.route('/debugbtn', methods=['POST'])
-# def debugbtn():
-#     print("Debugging python code...")
 
-
-#     return jsonify({'status':'----------test debug--------------'}), 200
 @app.route('/debugbtn', methods=['POST'])
 def debugbtn():
     print("Debugging Python code...")
