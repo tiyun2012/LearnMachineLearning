@@ -1,5 +1,5 @@
 import numpy as np
-
+from PIL import Image, ImageOps
 class NeuralNetwork:
     def __init__(self, input_size=1024, hidden_size1=128, hidden_size2=64, output_size=2):
         # Initialize weights and biases
@@ -89,6 +89,48 @@ class NeuralNetwork:
     def test_method(self):
         print("Testing method")
 
+
+    def augment_image(self, image):
+        """
+        Augment a PIL image (32x32) by applying a series of transformations.
+        Returns a list of augmented images.
+        """
+        augmented_images = []
+        angles = [-15, -10, 0, 10, 15]
+        translations = [(-2, 0), (2, 0), (0, -2), (0, 2)]
+        scales = [0.9, 1.1]
+
+        # Rotation augmentations
+        for angle in angles:
+            rotated = image.rotate(angle, fillcolor=255)
+            augmented_images.append(rotated)
+
+        # Translation augmentations
+        for dx, dy in translations:
+            translated = image.transform(
+                image.size, Image.AFFINE, (1, 0, dx, 0, 1, dy), fillcolor=255)
+            augmented_images.append(translated)
+
+        # Scaling augmentations
+        for scale in scales:
+            new_size = (int(image.width * scale), int(image.height * scale))
+            scaled = image.resize(new_size, Image.BILINEAR)
+            # If scaled image is smaller, pad; if larger, center-crop
+            if scaled.width < image.width or scaled.height < image.height:
+                padded = Image.new("L", image.size, color=255)
+                x_offset = (image.width - scaled.width) // 2
+                y_offset = (image.height - scaled.height) // 2
+                padded.paste(scaled, (x_offset, y_offset))
+                augmented_images.append(padded)
+            else:
+                left = (scaled.width - image.width) // 2
+                top = (scaled.height - image.height) // 2
+                cropped = scaled.crop((left, top, left + image.width, top + image.height))
+                augmented_images.append(cropped)
+
+        # Optional: Add noise, shear, or even combined transformations here
+
+        return augmented_images
 
 def run():
     # Simulated dataset (replace with real data)
