@@ -21,6 +21,13 @@
       border: 1px solid #000;
       image-rendering: pixelated;
     }
+    /* Container for the label input */
+    #label-container {
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
     .controls {
       margin-top: 20px;
     }
@@ -88,6 +95,11 @@
   <h1>Simple Drawing App (32x32)</h1>
   <div id="drawing-container">
     <canvas id="drawCanvas" width="32" height="32"></canvas>
+  </div>
+  <!-- New label input beside the canvas -->
+  <div id="label-container">
+    <label for="imageLabel">Label:</label>
+    <input id="imageLabel" type="text" placeholder="Enter label for image" />
   </div>
   <div class="controls">
     <input id="imageName" type="text" placeholder="Enter name of image"/>
@@ -183,13 +195,34 @@
       link.click();
     });
 
+    // When submitting, include the label from the new input field.
+    document.getElementById('submitBtn').addEventListener('click', () => {
+      const imageData = canvas.toDataURL('image/png');
+      const label = document.getElementById('imageLabel').value.trim();
+      fetch('http://localhost:5000/process-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageData: imageData, label: label })
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('result').textContent = data.message || 'No message received';
+        if (data.imageData) document.getElementById('processedImage').src = data.imageData;
+      })
+      .catch(error => {
+        document.getElementById('result').textContent = 'Error submitting image';
+      });
+    });
+
+    // When debugging, include the label if needed.
     document.getElementById('debugbtn').addEventListener('click', async () => {
       try {
         const imageData = canvas.toDataURL('image/png');
+        const label = document.getElementById('imageLabel').value.trim();
         const response = await fetch('http://localhost:5000/debugbtn', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageData: imageData }),
+          body: JSON.stringify({ imageData: imageData, label: label }),
         });
         const data = await response.json();
         if (data.status === 'success') {
@@ -209,23 +242,6 @@
       } catch (error) {
         document.getElementById('result').textContent = 'Error calling debugbtn';
       }
-    });
-
-    document.getElementById('submitBtn').addEventListener('click', () => {
-      const imageData = canvas.toDataURL('image/png');
-      fetch('http://localhost:5000/process-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageData: imageData })
-      })
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('result').textContent = data.message || 'No message received';
-        if (data.imageData) document.getElementById('processedImage').src = data.imageData;
-      })
-      .catch(error => {
-        document.getElementById('result').textContent = 'Error submitting image';
-      });
     });
   </script>
 </body>
